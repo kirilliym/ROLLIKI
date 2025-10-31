@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  local-storage:
+    image: postgres:16-alpine3.19
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - '5436:5432'
+
+  weather-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - local-storage
+    env_file:
+      - .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://local-storage:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - '8081:8080'
