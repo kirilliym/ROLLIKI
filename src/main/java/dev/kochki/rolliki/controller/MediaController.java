@@ -4,13 +4,11 @@ import dev.kochki.rolliki.model.dto.MediaFileResponse;
 import dev.kochki.rolliki.model.entity.MediaFile;
 import dev.kochki.rolliki.model.entity.MediaType;
 import dev.kochki.rolliki.model.entity.FileCategory;
-import dev.kochki.rolliki.model.request.MediaFilterRequest;
 import dev.kochki.rolliki.model.request.UpdateDescriptionRequest;
 import dev.kochki.rolliki.service.MediaStorageService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,8 +58,13 @@ public class MediaController {
             Resource resource = mediaStorageService.loadMediaFile(mediaFileId);
             MediaFile mediaFile = mediaStorageService.getMediaFileInfo(mediaFileId);
 
+            String contentType = mediaFile.getContentType();
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(mediaFile.getContentType()))
+                    .header(HttpHeaders.CONTENT_TYPE, contentType)
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"" + mediaFile.getOriginalName() + "\"")
                     .body(resource);
@@ -80,8 +83,13 @@ public class MediaController {
             Resource resource = mediaStorageService.loadMediaFile(mediaFileId);
             MediaFile mediaFile = mediaStorageService.getMediaFileInfo(mediaFileId);
 
+            String contentType = mediaFile.getContentType();
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(mediaFile.getContentType()))
+                    .header(HttpHeaders.CONTENT_TYPE, contentType)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
                     .body(resource);
 
