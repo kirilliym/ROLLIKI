@@ -40,4 +40,8 @@ public class ProjectService {
         Project project = getProject(projectId);
         projectRepository.delete(project);
     }
+
+    public boolean existsById(UUID projectId) {
+        return projectRepository.existsById(projectId);
+    }
 }
