@@ -56,7 +56,7 @@ public class StageService {
         return stageRepository.findByStatus(status);
     }
 
-    public List<Stage> getStagesByRequiredRole(dev.kochki.rolliki.entity.Role requiredRole) {
+    public List<Stage> getStagesByRequiredRole(dev.kochki.rolliki.model.entity.Role requiredRole) {
         return stageRepository.findByRequiredRole(requiredRole);
     }
 
