@@ -13,7 +13,7 @@ FROM openjdk:21-jdk-slim
 
 WORKDIR /app
 
-COPY --from=builder /app/target/WeatherForecast-1.0-SNAPSHOT.jar app.jar
+COPY --from=builder /app/target/rolliki-1.0-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 
