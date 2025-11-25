@@ -1,5 +1,6 @@
 package dev.kochki.rolliki.model.request;
 
+import dev.kochki.rolliki.model.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,9 +8,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateProjectRequest {
-    private String name;
-    private String description;
-    private String url;
-    private Long ownerId;
+public class CreateConnectionRequest {
+    private Long projectId;
+    private Long userId;
+    private Role role;
 }

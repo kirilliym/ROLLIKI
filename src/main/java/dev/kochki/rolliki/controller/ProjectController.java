@@ -3,76 +3,94 @@ package dev.kochki.rolliki.controller;
 import dev.kochki.rolliki.model.entity.Project;
 import dev.kochki.rolliki.model.request.CreateProjectRequest;
 import dev.kochki.rolliki.model.request.UpdateProjectRequest;
+import dev.kochki.rolliki.model.response.ProjectResponse;
 import dev.kochki.rolliki.service.ProjectService;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/projects")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/project")
+@RequiredArgsConstructor
 public class ProjectController {
 
     private final ProjectService projectService;
 
-    public ProjectController(ProjectService projectService) {
-        this.projectService = projectService;
-    }
-
     @PostMapping
-    public ResponseEntity<Project> createProject(@RequestBody CreateProjectRequest request) {
-        try {
-            Project project = new Project(request.getName(), request.getDescription());
-            Project createdProject = projectService.createProject(project);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdProject);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ProjectResponse> createProject(@RequestBody CreateProjectRequest request) {
+        Project project = new Project();
+        project.setName(request.getName());
+        project.setDescription(request.getDescription());
+        project.setUrl(request.getUrl());
+        project.setOwnerId(request.getOwnerId());
+
+        Project createdProject = projectService.createProject(project);
+        ProjectResponse response = new ProjectResponse(
+                createdProject.getId(),
+                createdProject.getName(),
+                createdProject.getDescription(),
+                createdProject.getUrl(),
+                createdProject.getOwnerId()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<Project>> getAllProjects() {
-        try {
-            List<Project> projects = projectService.getAllProjects();
-            return ResponseEntity.ok(projects);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<List<ProjectResponse>> getAllProjects() {
+        List<Project> projects = projectService.getAllProjects();
+        List<ProjectResponse> responses = projects.stream()
+                .map(project -> new ProjectResponse(
+                        project.getId(),
+                        project.getName(),
+                        project.getDescription(),
+                        project.getUrl(),
+                        project.getOwnerId()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/{projectId}")
-    public ResponseEntity<Project> getProject(@PathVariable UUID projectId) {
-        try {
-            Project project = projectService.getProject(projectId);
-            return ResponseEntity.ok(project);
-        } catch (Exception ex) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/{id}")
+    public ResponseEntity<ProjectResponse> getProjectById(@PathVariable Long id) {
+        return projectService.getProjectById(id)
+                .map(project -> new ProjectResponse(
+                        project.getId(),
+                        project.getName(),
+                        project.getDescription(),
+                        project.getUrl(),
+                        project.getOwnerId()
+                ))
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{projectId}")
-    public ResponseEntity<Project> updateProject(
-            @PathVariable UUID projectId,
-            @RequestBody UpdateProjectRequest request) {
-        try {
-            Project projectDetails = new Project(request.getName(), request.getDescription());
-            Project updatedProject = projectService.updateProject(projectId, projectDetails);
-            return ResponseEntity.ok(updatedProject);
-        } catch (Exception ex) {
-            return ResponseEntity.notFound().build();
-        }
+    @PutMapping("/{id}")
+    public ResponseEntity<ProjectResponse> updateProject(@PathVariable Long id, @RequestBody UpdateProjectRequest request) {
+        Project projectDetails = new Project();
+        projectDetails.setName(request.getName());
+        projectDetails.setDescription(request.getDescription());
+        projectDetails.setUrl(request.getUrl());
+
+        Project updatedProject = projectService.updateProject(id, projectDetails);
+        ProjectResponse response = new ProjectResponse(
+                updatedProject.getId(),
+                updatedProject.getName(),
+                updatedProject.getDescription(),
+                updatedProject.getUrl(),
+                updatedProject.getOwnerId()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{projectId}")
-    public ResponseEntity<Void> deleteProject(@PathVariable UUID projectId) {
-        try {
-            projectService.deleteProject(projectId);
-            return ResponseEntity.ok().build();
-        } catch (Exception ex) {
-            return ResponseEntity.notFound().build();
-        }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
+        projectService.deleteProject(id);
+        return ResponseEntity.ok().build();
     }
 }

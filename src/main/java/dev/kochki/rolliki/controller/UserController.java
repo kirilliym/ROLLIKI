@@ -1,6 +1,8 @@
 package dev.kochki.rolliki.controller;
 
 import dev.kochki.rolliki.mapper.UserMapper;
+import dev.kochki.rolliki.model.request.ChangePasswordRequest;
+import dev.kochki.rolliki.model.request.ChangeUsernameRequest;
 import dev.kochki.rolliki.model.request.UserRequest;
 import dev.kochki.rolliki.model.response.UserResponse;
 import dev.kochki.rolliki.service.UserService;
@@ -38,5 +40,27 @@ public class UserController {
         return userService.getUserById(id)
                 .map(userDTO -> ResponseEntity.ok(userMapper.mapToResponse(userDTO)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest changePasswordRequest) {
+        boolean success = userService.changePassword(id, changePasswordRequest);
+
+        if (success) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/{id}/username")
+    public ResponseEntity<Void> changeUsername(@PathVariable Long id, @RequestBody ChangeUsernameRequest changeUsernameRequest) {
+        boolean success = userService.changeUsername(id, changeUsernameRequest);
+
+        if (success) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

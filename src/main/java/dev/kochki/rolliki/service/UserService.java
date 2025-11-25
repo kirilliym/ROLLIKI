@@ -3,6 +3,8 @@ package dev.kochki.rolliki.service;
 import dev.kochki.rolliki.mapper.UserMapper;
 import dev.kochki.rolliki.model.dto.UserDTO;
 import dev.kochki.rolliki.model.entity.User;
+import dev.kochki.rolliki.model.request.ChangePasswordRequest;
+import dev.kochki.rolliki.model.request.ChangeUsernameRequest;
 import dev.kochki.rolliki.model.request.UserRequest;
 import dev.kochki.rolliki.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +27,7 @@ public class UserService {
 
         User user = new User();
         user.setUsername(userRequest.username());
-        user.setPassword(userRequest.password()); // В реальном приложении здесь должно быть хэширование пароля
+        user.setPassword(userRequest.password());
 
         User savedUser = userRepository.save(user);
         return userMapper.mapToDTO(savedUser);
@@ -51,5 +53,43 @@ public class UserService {
     @Transactional(readOnly = true)
     public boolean userExists(String username) {
         return userRepository.existsByUsername(username);
+    }
+
+    @Transactional
+    public boolean changePassword(Long userId, ChangePasswordRequest changePasswordRequest) {
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            if (!user.getPassword().equals(changePasswordRequest.getCurrentPassword())) {
+                return false;
+            }
+
+            user.setPassword(changePasswordRequest.getNewPassword());
+            userRepository.save(user);
+            return true;
+        }
+
+        return false;
+    }
+
+    @Transactional
+    public boolean changeUsername(Long userId, ChangeUsernameRequest changeUsernameRequest) {
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            if (userRepository.existsByUsername(changeUsernameRequest.getNewUsername())) {
+                return false;
+            }
+
+            user.setUsername(changeUsernameRequest.getNewUsername());
+            userRepository.save(user);
+            return true;
+        }
+
+        return false;
     }
 }

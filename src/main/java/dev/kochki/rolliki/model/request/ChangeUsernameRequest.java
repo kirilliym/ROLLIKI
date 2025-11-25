@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateProjectRequest {
-    private String name;
-    private String description;
-    private String url;
-    private Long ownerId;
+public class ChangeUsernameRequest {
+    private String newUsername;
 }

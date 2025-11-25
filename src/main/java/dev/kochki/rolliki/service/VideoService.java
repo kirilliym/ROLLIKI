@@ -22,10 +22,6 @@ public class VideoService {
     }
 
     public Video createVideo(UUID projectId, CreateVideoRequest request) {
-        // Проверяем существование проекта
-        if (!projectService.existsById(projectId)) {
-            throw new RuntimeException("Проект не найден: " + projectId);
-        }
 
         Video video = new Video();
         video.setProjectId(projectId);

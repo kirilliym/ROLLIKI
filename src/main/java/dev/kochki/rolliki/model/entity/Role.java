@@ -1,8 +1,9 @@
 package dev.kochki.rolliki.model.entity;
 
 public enum Role {
-    DIRECTOR,
+    OWNER,
     EDITOR,
     OPERATOR,
-    DESIGNER
+    DESIGNER,
+    INVITE
 }

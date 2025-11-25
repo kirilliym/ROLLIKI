@@ -1,47 +1,60 @@
 package dev.kochki.rolliki.service;
 
+import dev.kochki.rolliki.model.entity.Connection;
 import dev.kochki.rolliki.model.entity.Project;
+import dev.kochki.rolliki.model.entity.Role;
+import dev.kochki.rolliki.repository.ConnectionRepository;
 import dev.kochki.rolliki.repository.ProjectRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
-
-    public ProjectService(ProjectRepository projectRepository) {
-        this.projectRepository = projectRepository;
-    }
-
+    private final ConnectionRepository connectionRepository;
     public Project createProject(Project project) {
-        return projectRepository.save(project);
-    }
+        Project savedProject = projectRepository.save(project);
 
-    public Project getProject(UUID projectId) {
-        return projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Проект не найден: " + projectId));
-    }
+        Connection ownerConnection = new Connection();
+        ownerConnection.setProjectId(savedProject.getId());
+        ownerConnection.setUserId(savedProject.getOwnerId());
+        ownerConnection.setRole(Role.OWNER);
+        ownerConnection.setAccepted(true);
 
+        connectionRepository.save(ownerConnection);
+
+        return savedProject;
+    }
+    @Transactional(readOnly = true)
     public List<Project> getAllProjects() {
         return projectRepository.findAll();
     }
 
-    public Project updateProject(UUID projectId, Project projectDetails) {
-        Project project = getProject(projectId);
+    @Transactional(readOnly = true)
+    public Optional<Project> getProjectById(Long id) {
+        return projectRepository.findById(id);
+    }
+
+    @Transactional
+    public Project updateProject(Long id, Project projectDetails) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
         project.setName(projectDetails.getName());
         project.setDescription(projectDetails.getDescription());
+        project.setUrl(projectDetails.getUrl());
+
         return projectRepository.save(project);
     }
 
-    public void deleteProject(UUID projectId) {
-        Project project = getProject(projectId);
-        projectRepository.delete(project);
-    }
-
-    public boolean existsById(UUID projectId) {
-        return projectRepository.existsById(projectId);
+    @Transactional
+    public void deleteProject(Long id) {
+        projectRepository.deleteById(id);
     }
 }

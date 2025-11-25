@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateProjectRequest {
-    private String name;
-    private String description;
-    private String url;
-    private Long ownerId;
+public class ChangePasswordRequest {
+    private String currentPassword;
+    private String newPassword;
 }
