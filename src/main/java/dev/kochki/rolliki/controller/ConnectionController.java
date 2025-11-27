@@ -1,9 +1,11 @@
 package dev.kochki.rolliki.controller;
 
 import dev.kochki.rolliki.model.entity.Connection;
+import dev.kochki.rolliki.model.entity.Role;
 import dev.kochki.rolliki.model.request.CreateConnectionRequest;
 import dev.kochki.rolliki.model.request.UpdateConnectionRequest;
 import dev.kochki.rolliki.model.response.ConnectionResponse;
+import dev.kochki.rolliki.repository.ConnectionRepository;
 import dev.kochki.rolliki.service.ConnectionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 public class ConnectionController {
 
     private final ConnectionService connectionService;
+    private final ConnectionRepository connectionRepository;
 
     @PostMapping
     public ResponseEntity<ConnectionResponse> createConnection(@RequestBody CreateConnectionRequest request) {
@@ -169,5 +172,14 @@ public class ConnectionController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/getrole/{projectId}/{userId}")
+    public ResponseEntity<Role> getRole(@PathVariable Long projectId, @PathVariable Long userId) {
+        Connection connection = connectionRepository.findByUserIdAndProjectId(userId, projectId);
+        if (connection != null && connection.getAccepted()) {
+            return ResponseEntity.ok(connection.getRole());
+        }
+        return ResponseEntity.notFound().build();
     }
 }

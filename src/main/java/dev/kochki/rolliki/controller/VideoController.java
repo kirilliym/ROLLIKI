@@ -1,96 +1,108 @@
 package dev.kochki.rolliki.controller;
 
 import dev.kochki.rolliki.model.entity.Video;
-import dev.kochki.rolliki.model.entity.VideoStatus;
 import dev.kochki.rolliki.model.request.CreateVideoRequest;
 import dev.kochki.rolliki.model.request.UpdateVideoRequest;
+import dev.kochki.rolliki.model.response.VideoResponse;
 import dev.kochki.rolliki.service.VideoService;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/projects/{projectId}/videos")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/video")
+@RequiredArgsConstructor
 public class VideoController {
 
     private final VideoService videoService;
 
-    public VideoController(VideoService videoService) {
-        this.videoService = videoService;
-    }
-
     @PostMapping
-    public ResponseEntity<Video> createVideo(
-            @PathVariable UUID projectId,
-            @RequestBody CreateVideoRequest request) {
-        try {
-            Video video = videoService.createVideo(projectId, request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(video);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<VideoResponse> createVideo(@RequestBody CreateVideoRequest request) {
+        Video video = new Video();
+        video.setProjectId(request.getProjectId());
+        video.setDeadline(request.getDeadline());
+        video.setTitle(request.getTitle());
+        video.setDescription(request.getDescription());
+
+        Video createdVideo = videoService.createVideo(video);
+        VideoResponse response = new VideoResponse(
+                createdVideo.getId(),
+                createdVideo.getProjectId(),
+                createdVideo.getCreatedAt(),
+                createdVideo.getDeadline(),
+                createdVideo.getCompletionPercentage(),
+                createdVideo.getStatus(),
+                createdVideo.getTitle(),
+                createdVideo.getDescription()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Video>> getProjectVideos(@PathVariable UUID projectId) {
-        try {
-            List<Video> videos = videoService.getProjectVideos(projectId);
-            return ResponseEntity.ok(videos);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteVideo(@PathVariable Long id) {
+        videoService.deleteVideo(id);
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{videoId}")
-    public ResponseEntity<Video> getVideo(
-            @PathVariable UUID projectId,
-            @PathVariable UUID videoId) {
-        try {
-            Video video = videoService.getVideo(videoId);
-            return ResponseEntity.ok(video);
-        } catch (Exception ex) {
-            return ResponseEntity.notFound().build();
-        }
+    @PutMapping("/{id}")
+    public ResponseEntity<VideoResponse> updateVideo(@PathVariable Long id, @RequestBody UpdateVideoRequest request) {
+        Video videoDetails = new Video();
+        videoDetails.setTitle(request.getTitle());
+        videoDetails.setDescription(request.getDescription());
+        videoDetails.setDeadline(request.getDeadline());
+
+        Video updatedVideo = videoService.updateVideo(id, videoDetails);
+        VideoResponse response = new VideoResponse(
+                updatedVideo.getId(),
+                updatedVideo.getProjectId(),
+                updatedVideo.getCreatedAt(),
+                updatedVideo.getDeadline(),
+                updatedVideo.getCompletionPercentage(),
+                updatedVideo.getStatus(),
+                updatedVideo.getTitle(),
+                updatedVideo.getDescription()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<Video>> getVideosByStatus(
-            @PathVariable UUID projectId,
-            @PathVariable VideoStatus status) {
-        try {
-            List<Video> videos = videoService.getVideosByStatus(status);
-            return ResponseEntity.ok(videos);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<List<VideoResponse>> getVideosByProjectId(@PathVariable Long projectId) {
+        List<Video> videos = videoService.getVideosByProjectId(projectId);
+        List<VideoResponse> responses = videos.stream()
+                .map(video -> new VideoResponse(
+                        video.getId(),
+                        video.getProjectId(),
+                        video.getCreatedAt(),
+                        video.getDeadline(),
+                        video.getCompletionPercentage(),
+                        video.getStatus(),
+                        video.getTitle(),
+                        video.getDescription()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
     }
 
-    @PutMapping("/{videoId}")
-    public ResponseEntity<Video> updateVideo(
-            @PathVariable UUID projectId,
-            @PathVariable UUID videoId,
-            @RequestBody UpdateVideoRequest request) {
-        try {
-            Video updatedVideo = videoService.updateVideo(videoId, request);
-            return ResponseEntity.ok(updatedVideo);
-        } catch (Exception ex) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @DeleteMapping("/{videoId}")
-    public ResponseEntity<Void> deleteVideo(
-            @PathVariable UUID projectId,
-            @PathVariable UUID videoId) {
-        try {
-            videoService.deleteVideo(videoId);
-            return ResponseEntity.ok().build();
-        } catch (Exception ex) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/{id}")
+    public ResponseEntity<VideoResponse> getVideoById(@PathVariable Long id) {
+        return videoService.getVideoById(id)
+                .map(video -> new VideoResponse(
+                        video.getId(),
+                        video.getProjectId(),
+                        video.getCreatedAt(),
+                        video.getDeadline(),
+                        video.getCompletionPercentage(),
+                        video.getStatus(),
+                        video.getTitle(),
+                        video.getDescription()
+                ))
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

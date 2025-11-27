@@ -2,75 +2,57 @@ package dev.kochki.rolliki.service;
 
 import dev.kochki.rolliki.model.entity.Video;
 import dev.kochki.rolliki.model.entity.VideoStatus;
-import dev.kochki.rolliki.model.request.CreateVideoRequest;
-import dev.kochki.rolliki.model.request.UpdateVideoRequest;
 import dev.kochki.rolliki.repository.VideoRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class VideoService {
 
     private final VideoRepository videoRepository;
-    private final ProjectService projectService;
 
-    public VideoService(VideoRepository videoRepository, ProjectService projectService) {
-        this.videoRepository = videoRepository;
-        this.projectService = projectService;
-    }
-
-    public Video createVideo(UUID projectId, CreateVideoRequest request) {
-
-        Video video = new Video();
-        video.setProjectId(projectId);
-        video.setName(request.getName());
-        video.setDescription(request.getDescription());
+    @Transactional
+    public Video createVideo(Video video) {
+        video.setCompletionPercentage(0);
         video.setStatus(VideoStatus.IN_PROGRESS);
-
         return videoRepository.save(video);
     }
 
-    public Video getVideo(UUID videoId) {
-        return videoRepository.findById(videoId)
-                .orElseThrow(() -> new RuntimeException("Видео не найдено: " + videoId));
+    @Transactional
+    public void deleteVideo(Long id) {
+        videoRepository.deleteById(id);
     }
 
-    public List<Video> getProjectVideos(UUID projectId) {
-        return videoRepository.findByProjectId(projectId);
-    }
+    @Transactional
+    public Video updateVideo(Long id, Video videoDetails) {
+        Video video = videoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Video not found"));
 
-    public List<Video> getVideosByStatus(VideoStatus status) {
-        return videoRepository.findByStatus(status);
-    }
-
-    public List<Video> getProjectVideosByStatus(UUID projectId, VideoStatus status) {
-        return videoRepository.findByProjectIdAndStatus(projectId, status);
-    }
-
-    public Video updateVideo(UUID videoId, UpdateVideoRequest request) {
-        Video video = getVideo(videoId);
-
-        if (request.getName() != null) {
-            video.setName(request.getName());
+        if (videoDetails.getTitle() != null) {
+            video.setTitle(videoDetails.getTitle());
         }
-        if (request.getDescription() != null) {
-            video.setDescription(request.getDescription());
+        if (videoDetails.getDescription() != null) {
+            video.setDescription(videoDetails.getDescription());
         }
-        if (request.getStatus() != null) {
-            video.setStatus(request.getStatus());
+        if (videoDetails.getDeadline() != null) {
+            video.setDeadline(videoDetails.getDeadline());
         }
 
         return videoRepository.save(video);
     }
 
-    public void deleteVideo(UUID videoId) {
-        Video video = getVideo(videoId);
-        videoRepository.delete(video);
+    @Transactional(readOnly = true)
+    public List<Video> getVideosByProjectId(Long projectId) {
+        return videoRepository.findByProjectIdOrderByStatusAndDeadline(projectId);
     }
 
-    public boolean existsById(UUID videoId) {
-        return videoRepository.existsById(videoId);
+    @Transactional(readOnly = true)
+    public Optional<Video> getVideoById(Long id) {
+        return videoRepository.findById(id);
     }
 }
