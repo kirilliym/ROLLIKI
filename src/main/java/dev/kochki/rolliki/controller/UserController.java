@@ -63,4 +63,11 @@ public class UserController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/username/{username}")
+    public ResponseEntity<Long> getUserIdByUsername(@PathVariable String username) {
+        return userService.getUserByUsername(username)
+                .map(userDTO -> ResponseEntity.ok(userDTO.getId()))
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

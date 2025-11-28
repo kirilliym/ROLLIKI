@@ -92,4 +92,10 @@ public class UserService {
 
         return false;
     }
+
+    @Transactional(readOnly = true)
+    public Optional<UserDTO> getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(userMapper::mapToDTO);
+    }
 }

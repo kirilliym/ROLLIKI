@@ -4,6 +4,5 @@ public enum Role {
     OWNER,
     EDITOR,
     OPERATOR,
-    DESIGNER,
-    INVITE
+    DESIGNER
 }

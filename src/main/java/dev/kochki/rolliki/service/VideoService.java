@@ -55,4 +55,14 @@ public class VideoService {
     public Optional<Video> getVideoById(Long id) {
         return videoRepository.findById(id);
     }
+
+    @Transactional
+    public Video updateVideoCompletion(Long id, Video videoDetails) {
+        Video video = videoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Video not found"));
+
+        video.setCompletionPercentage(videoDetails.getCompletionPercentage());
+
+        return videoRepository.save(video);
+    }
 }
